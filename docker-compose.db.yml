@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+
+  mongo:
+    image: 'mongo:3.6'
+    command: --serviceExecutor adaptive
+    container_name: 'mongodb-service'
+    volumes:
+      - mongo_data:/data/db
+    ports:
+      - '27017-27019:27017-27019'
+    
+      
+  sql-server:
+    image: mcr.microsoft.com/mssql/server:2019-GA-ubuntu-16.04
+    ports:
+      - 1433:1433
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=abcABC123
+    volumes:
+      - sqlserver:/var/opt/mssql
+
+
+  es01:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.15.0
+    container_name: elasticsearch
+    environment:
+      - node.name=es01
+      - cluster.name=es-docker-cluster
+      - discovery.seed_hosts=es02
+      - cluster.initial_master_nodes=es01,es02
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - es01-data:/usr/share/elasticsearch/data
+    ports:
+      - 9200:9200
+    networks:
+      - esnet
+      
+networks:
+  esnet:
+
+volumes:
+  mongo_data:
+  es01-data:
+  sqlserver:
